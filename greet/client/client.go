@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	greet_pb "rpc_study/greet/greet.pb"
@@ -22,7 +24,8 @@ func main() {
 	//doUnary(c)
 	//doServerStreaming(c)
 	//doClientStreaming(c)
-	doBiDiStreaming(c)
+	//doBiDiStreaming(c)
+	doErrorUnary(c)
 }
 
 func doUnary(c greet_pb.GreetServiceClient) {
@@ -163,4 +166,31 @@ func doBiDiStreaming(c greet_pb.GreetServiceClient) {
 	}()
 
 	<-waitCh
+}
+
+func doErrorUnary(c greet_pb.GreetServiceClient) {
+	doErrorCall(c, 10)
+	doErrorCall(c, -2)
+}
+
+func doErrorCall(c greet_pb.GreetServiceClient, n int32) {
+	fmt.Println("Square root rpc start")
+	input := &greet_pb.SquareRootRequest{
+		Number: n,
+	}
+
+	res, err := c.SquareRoot(context.Background(), input)
+	if err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			fmt.Println(respErr.Message())
+			fmt.Println(respErr.Code())
+			if respErr.Code() == codes.InvalidArgument {
+				fmt.Println("invalid argument!")
+			}
+		} else {
+			log.Fatal(err)
+		}
+	}
+	fmt.Println(res)
 }

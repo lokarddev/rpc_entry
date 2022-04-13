@@ -40,6 +40,14 @@ message GreetEveryoneResponse {
   string result = 1;
 }
 
+message SquareRootRequest {
+  int32 number = 1;
+}
+
+message SquareRootResponse {
+  double number = 1;
+}
+
 service GreetService{
   //Unary
   rpc Greet(GreetRequest) returns (GreetResponse) {};
@@ -49,4 +57,9 @@ service GreetService{
   rpc LongGreet(stream LongGreetRequest) returns (LongGreetResponse) {};
   //BiDi streaming
   rpc GreetEveryone(stream GreetEveryoneRequest) returns (stream GreetEveryoneResponse) {};
+
+  // error handling
+  // this RPC will throw and exception if sent number is negative
+  // Error being sent is of type INVALID_ARGUMENT
+  rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {};
 }

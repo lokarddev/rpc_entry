@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 	"rpc_study/greet/greet.pb"
 	"time"
@@ -92,4 +95,13 @@ func (*server) GreetEveryone(stream greet_pb.GreetService_GreetEveryoneServer) e
 			log.Fatal(err)
 		}
 	}
+}
+
+func (*server) SquareRoot(ctx context.Context, req *greet_pb.SquareRootRequest) (*greet_pb.SquareRootResponse, error) {
+	fmt.Println("Square root run RPC")
+	number := req.GetNumber()
+	if number < 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "Receiver a negative number: %v", number)
+	}
+	return &greet_pb.SquareRootResponse{Number: math.Sqrt(float64(number))}, nil
 }
