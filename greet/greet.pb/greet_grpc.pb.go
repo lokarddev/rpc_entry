@@ -30,6 +30,10 @@ type GreetServiceClient interface {
 	LongGreet(ctx context.Context, opts ...grpc.CallOption) (GreetService_LongGreetClient, error)
 	//BiDi streaming
 	GreetEveryone(ctx context.Context, opts ...grpc.CallOption) (GreetService_GreetEveryoneClient, error)
+	GreetWithDeadline(ctx context.Context, in *GreetWithDeadlineRequest, opts ...grpc.CallOption) (*GreetWithDeadlineResponse, error)
+	// error handling
+	// this RPC will throw and exception if sent number is negative
+	// Error being sent is of type INVALID_ARGUMENT
 	SquareRoot(ctx context.Context, in *SquareRootRequest, opts ...grpc.CallOption) (*SquareRootResponse, error)
 }
 
@@ -147,6 +151,15 @@ func (x *greetServiceGreetEveryoneClient) Recv() (*GreetEveryoneResponse, error)
 	return m, nil
 }
 
+func (c *greetServiceClient) GreetWithDeadline(ctx context.Context, in *GreetWithDeadlineRequest, opts ...grpc.CallOption) (*GreetWithDeadlineResponse, error) {
+	out := new(GreetWithDeadlineResponse)
+	err := c.cc.Invoke(ctx, "/greet.GreetService/GreetWithDeadline", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *greetServiceClient) SquareRoot(ctx context.Context, in *SquareRootRequest, opts ...grpc.CallOption) (*SquareRootResponse, error) {
 	out := new(SquareRootResponse)
 	err := c.cc.Invoke(ctx, "/greet.GreetService/SquareRoot", in, out, opts...)
@@ -168,6 +181,10 @@ type GreetServiceServer interface {
 	LongGreet(GreetService_LongGreetServer) error
 	//BiDi streaming
 	GreetEveryone(GreetService_GreetEveryoneServer) error
+	GreetWithDeadline(context.Context, *GreetWithDeadlineRequest) (*GreetWithDeadlineResponse, error)
+	// error handling
+	// this RPC will throw and exception if sent number is negative
+	// Error being sent is of type INVALID_ARGUMENT
 	SquareRoot(context.Context, *SquareRootRequest) (*SquareRootResponse, error)
 	mustEmbedUnimplementedGreetServiceServer()
 }
@@ -187,6 +204,9 @@ func (UnimplementedGreetServiceServer) LongGreet(GreetService_LongGreetServer) e
 }
 func (UnimplementedGreetServiceServer) GreetEveryone(GreetService_GreetEveryoneServer) error {
 	return status.Errorf(codes.Unimplemented, "method GreetEveryone not implemented")
+}
+func (UnimplementedGreetServiceServer) GreetWithDeadline(context.Context, *GreetWithDeadlineRequest) (*GreetWithDeadlineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GreetWithDeadline not implemented")
 }
 func (UnimplementedGreetServiceServer) SquareRoot(context.Context, *SquareRootRequest) (*SquareRootResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SquareRoot not implemented")
@@ -295,6 +315,24 @@ func (x *greetServiceGreetEveryoneServer) Recv() (*GreetEveryoneRequest, error) 
 	return m, nil
 }
 
+func _GreetService_GreetWithDeadline_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GreetWithDeadlineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GreetServiceServer).GreetWithDeadline(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/greet.GreetService/GreetWithDeadline",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GreetServiceServer).GreetWithDeadline(ctx, req.(*GreetWithDeadlineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GreetService_SquareRoot_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SquareRootRequest)
 	if err := dec(in); err != nil {
@@ -323,6 +361,10 @@ var GreetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Greet",
 			Handler:    _GreetService_Greet_Handler,
+		},
+		{
+			MethodName: "GreetWithDeadline",
+			Handler:    _GreetService_GreetWithDeadline_Handler,
 		},
 		{
 			MethodName: "SquareRoot",

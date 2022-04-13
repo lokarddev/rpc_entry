@@ -25,7 +25,9 @@ func main() {
 	//doServerStreaming(c)
 	//doClientStreaming(c)
 	//doBiDiStreaming(c)
-	doErrorUnary(c)
+	//doErrorUnary(c)
+	doUnaryWithDeadline(c, time.Second*3)
+	doUnaryWithDeadline(c, time.Second*6)
 }
 
 func doUnary(c greet_pb.GreetServiceClient) {
@@ -193,4 +195,31 @@ func doErrorCall(c greet_pb.GreetServiceClient, n int32) {
 		}
 	}
 	fmt.Println(res)
+}
+
+func doUnaryWithDeadline(c greet_pb.GreetServiceClient, s time.Duration) {
+	fmt.Println("Start unary")
+	req := &greet_pb.GreetWithDeadlineRequest{Greeting: &greet_pb.Greeting{
+		FirstName: "lokard",
+		LastName:  "deepmaker",
+	},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), s)
+	defer cancel()
+	response, err := c.GreetWithDeadline(ctx, req)
+	if err != nil {
+		statusErr, ok := status.FromError(err)
+		if ok {
+			if statusErr.Code() == codes.DeadlineExceeded {
+				fmt.Println("deadline exceeded")
+			} else {
+				fmt.Println("unexpected error")
+			}
+		} else {
+			log.Fatal(err)
+		}
+		return
+	}
+
+	fmt.Println(response)
 }

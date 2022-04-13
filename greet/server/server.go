@@ -105,3 +105,18 @@ func (*server) SquareRoot(ctx context.Context, req *greet_pb.SquareRootRequest) 
 	}
 	return &greet_pb.SquareRootResponse{Number: math.Sqrt(float64(number))}, nil
 }
+
+func (*server) GreetWithDeadline(ctx context.Context, request *greet_pb.GreetWithDeadlineRequest) (*greet_pb.GreetWithDeadlineResponse, error) {
+	fmt.Printf("Greet function was evoked with %s \n", request)
+	time.Sleep(time.Second * 4)
+	if ctx.Err() == context.Canceled {
+		fmt.Println("client cancelled request")
+		return nil, status.Error(codes.Canceled, "deadline exceeded")
+	}
+	last := request.GetGreeting().GetLastName()
+	first := request.GetGreeting().GetFirstName()
+
+	result := fmt.Sprintf("Hello %s %s", first, last)
+	res := &greet_pb.GreetWithDeadlineResponse{Result: result}
+	return res, nil
+}
